@@ -39,11 +39,11 @@ Part of the LiquiFact stack: **frontend** (Next.js) | **backend** (this repo) | 
 
 ## Development
 
-| Command        | Description                    |
-|----------------|--------------------------------|
-| `npm run dev`  | Start API with watch mode      |
-| `npm run start`| Start API (production-style)  |
-| `npm run lint` | Run ESLint on `src/`          |
+| Command         | Description                  |
+| --------------- | ---------------------------- |
+| `npm run dev`   | Start API with watch mode    |
+| `npm run start` | Start API (production-style) |
+| `npm run lint`  | Run ESLint on `src/`         |
 
 Default port: **3001**. After starting:
 
