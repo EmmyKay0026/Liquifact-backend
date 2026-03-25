@@ -1,10 +1,8 @@
 /**
  * LiquiFact API Gateway
- * Express server for invoice financing, auth, and Stellar integration.
+ * Express server bootstrap for invoice financing, auth, and Stellar integration.
  */
 
-const express = require('express');
-const cors = require('cors');
 require('dotenv').config();
 const { globalLimiter, sensitiveLimiter } = require('./middleware/rateLimit');
 const { authenticateToken } = require('./middleware/auth');
@@ -13,7 +11,6 @@ const asyncHandler = require('./utils/asyncHandler');
 const errorHandler = require('./middleware/errorHandler');
 const { callSorobanContract } = require('./services/soroban');
 
-const app = express();
 const PORT = process.env.PORT || 3001;
 
 /**
