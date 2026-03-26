@@ -111,8 +111,9 @@ function createCorsOptions() {
   return {
     /**
      * Validates request origin against the allowlist.
-     * @param {string|undefined} origin - The request origin header value
-     * @param {Function} callback - CORS callback (err, allow)
+     *
+     * @param {string|undefined} origin - The request origin header value.
+     * @param {Function} callback - CORS callback (err, allow).
      * @returns {void}
      */
     origin(origin, callback) {
