@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const { callSorobanContract } = require('./services/soroban');
+const { performHealthChecks } = require('./services/health');
 const {
   createCorsOptions,
   isCorsOriginRejectedError,
@@ -51,7 +52,7 @@ function createApp() {
   app.use(cors(createCorsOptions()));
   app.use(express.json());
 
-  // Health check
+  // Health check (liveness probe)
   app.get('/health', (req, res) => {
     res.json({
       status: 'ok',
@@ -59,6 +60,28 @@ function createApp() {
       version: '0.1.0',
       timestamp: new Date().toISOString(),
     });
+  });
+
+  // Readiness check (dependency-aware)
+  app.get('/ready', async (req, res) => {
+    try {
+      const { healthy, checks } = await performHealthChecks();
+      const status = healthy ? 200 : 503;
+      
+      res.status(status).json({
+        ready: healthy,
+        service: 'liquifact-api',
+        timestamp: new Date().toISOString(),
+        checks
+      });
+    } catch (error) {
+      res.status(503).json({
+        ready: false,
+        service: 'liquifact-api',
+        timestamp: new Date().toISOString(),
+        error: error.message
+      });
+    }
   });
 
   // API info
