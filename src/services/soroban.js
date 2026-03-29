@@ -164,7 +164,7 @@ async function withRetry(operation, config) {
  * );
  */
 async function callSorobanContract(operation, config) {
-  return withRetry(operation, Object.assign({}, SOROBAN_RETRY_CONFIG, config));
+  return withRetry(operation, config);
 }
 
 module.exports = {

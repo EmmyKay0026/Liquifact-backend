@@ -201,7 +201,7 @@ describe('LiquiFact API', () => {
         .send({ amount: 1000, customer: '  ACME \n Holdings \u0000 ' });
 
       expect(response.status).toBe(401);
-      expect(response.body.error).toBe('Authentication token is required');
+      expect(response.body.error.message).toBe('Authentication token is required');
     });
   });
 

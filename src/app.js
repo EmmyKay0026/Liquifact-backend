@@ -56,12 +56,24 @@ function handleCorsError(err, req, res, next) {
  * @returns {void}
  */
 function handleInternalError(err, req, res, _next) {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
   if (err && (err.type === 'entity.parse.failed' || err.status === 400)) {
     res.status(400).json({ error: 'Bad Request' });
     return;
   }
 
   console.error(err);
+  if (isDevelopment) {
+    res.status(500).json({
+      error: {
+        message: err && err.message ? err.message : 'Internal server error',
+        stack: err && err.stack ? err.stack : null,
+      },
+    });
+    return;
+  }
+
   res.status(500).json({ error: 'Internal server error' });
 }
 
