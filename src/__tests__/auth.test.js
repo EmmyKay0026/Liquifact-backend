@@ -69,17 +69,15 @@ describe('Authentication Middleware', () => {
     describe('Route Protection - GET /api/escrow/:invoiceId', () => {
         it('should allow escrow read with valid token', async () => {
             const response = await request(app)
-                .post('/api/escrow')
-                .set('Authorization', `Bearer ${validToken}`)
-                .send({ amount: 1000, customer: 'Auth Corp' });
+                .get('/api/escrow/test-invoice')
+                .set('Authorization', `Bearer ${validToken}`);
             expect(response.status).toBe(200);
             expect(response.body.data.invoiceId).toBe('test-invoice');
         });
 
         it('should reject escrow operations without token', async () => {
             const response = await request(app)
-                .post('/api/escrow')
-                .send({ amount: 1000, customer: 'Auth Corp' });
+                .get('/api/escrow/test-invoice');
             expect(response.status).toBe(401);
         });
     });
