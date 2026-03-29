@@ -346,9 +346,9 @@ describe('payloadTooLargeHandler()', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('parseAllowedOrigins()', () => {
-  it('returns null for undefined',     () => expect(parseAllowedOrigins(undefined)).toBeNull());
-  it('returns null for empty string',  () => expect(parseAllowedOrigins('')).toBeNull());
-  it('returns null for blank string',  () => expect(parseAllowedOrigins('   ')).toBeNull());
+  it('returns [] for undefined',       () => expect(parseAllowedOrigins(undefined)).toEqual([]));
+  it('returns [] for empty string',    () => expect(parseAllowedOrigins('')).toEqual([]));
+  it('returns [] for blank string',    () => expect(parseAllowedOrigins('   ')).toEqual([]));
   it('parses a single origin',         () => expect(parseAllowedOrigins('https://a.com')).toEqual(['https://a.com']));
   it('parses multiple origins',        () => expect(parseAllowedOrigins('https://a.com,https://b.com')).toEqual(['https://a.com','https://b.com']));
   it('trims whitespace around commas', () => expect(parseAllowedOrigins(' https://a.com , https://b.com ')).toEqual(['https://a.com','https://b.com']));
