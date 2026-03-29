@@ -30,7 +30,7 @@ function errorHandler(err, req, res, _next) {
     problem = formatProblemDetails({
       type: 'https://example.com/probs/unexpected-error',
       title: 'Internal Server Error',
-      status: 500,
+      status: err.statusCode || 500,
       detail: 'An unexpected error occurred while processing your request.',
       instance: req.originalUrl,
       stack: err.stack,

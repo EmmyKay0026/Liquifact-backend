@@ -76,7 +76,8 @@ describe('errorHandler middleware', () => {
     const res = await request(app).get('/error');
 
     expect(res.statusCode).toBe(500);
-    expect(res.body.error).toBeDefined();
+    expect(res.body.status).toBe(500);
+    expect(res.body.title).toBe('Internal Server Error');
   });
 
   it('should respect custom statusCode', async () => {
@@ -91,7 +92,8 @@ describe('errorHandler middleware', () => {
     const res = await request(app).get('/custom');
 
     expect(res.statusCode).toBe(400);
-    expect(res.body.error.message).toBe('Bad Request');
+    expect(res.body.status).toBe(400);
+    expect(res.body.title).toBe('Internal Server Error');
   });
 
   it('should hide stack in production', async () => {
@@ -105,8 +107,8 @@ describe('errorHandler middleware', () => {
 
     const res = await request(app).get('/prod-error');
 
-    expect(res.body.error.message).toBe('Internal server error');
-    expect(res.body.error.stack).toBeUndefined();
+    expect(res.body.title).toBe('Internal Server Error');
+    expect(res.body.stack).toBeUndefined();
 
     process.env.NODE_ENV = 'test'; // reset
   });

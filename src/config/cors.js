@@ -42,7 +42,7 @@ const DEV_DEFAULT_ORIGINS = [
  */
 function parseAllowedOrigins(raw) {
   if (!raw || raw.trim() === '') {
-    return [];
+    return null;
   }
 
   return [
@@ -73,7 +73,7 @@ function getDevelopmentFallbackOrigins() {
  */
 function getAllowedOriginsFromEnv(env = process.env) {
   const fromEnv = parseAllowedOrigins(env.CORS_ALLOWED_ORIGINS);
-  if (fromEnv.length > 0) {
+  if (fromEnv && fromEnv.length > 0) {
     return fromEnv;
   }
 
@@ -93,7 +93,7 @@ function getAllowedOriginsFromEnv(env = process.env) {
  */
 function resolveAllowlist() {
   const fromEnv = parseAllowedOrigins(process.env.CORS_ALLOWED_ORIGINS);
-  if (fromEnv.length > 0) {
+  if (fromEnv && fromEnv.length > 0) {
     return fromEnv;
   }
 

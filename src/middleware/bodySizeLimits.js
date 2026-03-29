@@ -171,6 +171,7 @@ function payloadTooLargeHandler(err, req, res, next) {
     return res.status(413).json({
       error: 'Payload Too Large',
       message: 'Request body exceeds the maximum allowed size.',
+      limit: err.limit || 'unknown',
       path: req.path,
     });
   }
