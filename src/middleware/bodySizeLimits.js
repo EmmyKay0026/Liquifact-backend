@@ -99,7 +99,6 @@ function jsonBodyLimit(limit) {
   const maxBytes = parseSize(resolvedLimit);
 
   return [
-    express.json({ limit: resolvedLimit, strict: true }),
     /**
      * Content-Length pre-flight guard.
      *
@@ -115,6 +114,7 @@ function jsonBodyLimit(limit) {
       }
       next();
     },
+    express.json({ limit: resolvedLimit, strict: true }),
   ];
 }
 
@@ -132,7 +132,6 @@ function urlencodedBodyLimit(limit) {
   const maxBytes = parseSize(resolvedLimit);
 
   return [
-    express.urlencoded({ limit: resolvedLimit, extended: false }),
     /**
      * Content-Length pre-flight guard.
      *
@@ -148,6 +147,7 @@ function urlencodedBodyLimit(limit) {
       }
       next();
     },
+    express.urlencoded({ limit: resolvedLimit, extended: false }),
   ];
 }
 
