@@ -1,11 +1,11 @@
 const request = require('supertest');
 const { createApp } = require('../app');
-const invoiceService = require('../services/invoice.service');
 
-// Mock the service — use a factory to avoid loading the real module (which requires knex)
 jest.mock('../services/invoice.service', () => ({
   getInvoices: jest.fn(),
 }));
+
+const invoiceService = require('../services/invoice.service');
 
 describe('Invoice API Integration', () => {
   let app;
