@@ -291,7 +291,111 @@ Unexpected error:
 
 ---
 
-## CI/CD
+## Load baseline suite
+
+The repo includes a focused load baseline suite for representative core endpoint reads:
+
+- `GET /health`
+- `GET /api/invoices`
+- `GET /api/escrow/:invoiceId`
+
+The suite uses `autocannon` and captures:
+
+- total requests
+- throughput in requests per second
+- average latency
+- p50 latency
+- p95 latency
+- p99 latency
+- error count
+- non-2xx count
+- timeout count
+
+### Safe defaults
+
+- targets `http://127.0.0.1:3001`
+- blocks remote targets unless `ALLOW_REMOTE_LOAD_BASELINES=true`
+- does not hardcode tokens or credentials
+- uses a placeholder escrow invoice id unless a fixture id is provided
+
+Do not run the suite against production without explicit approval.
+
+### Environment variables
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `LOAD_BASE_URL` | `http://127.0.0.1:3001` | Base URL for the load target |
+| `ALLOW_REMOTE_LOAD_BASELINES` | `false` | Explicit opt-in for non-local targets |
+| `LOAD_DURATION_SECONDS` | `15` | Duration per endpoint scenario |
+| `LOAD_CONNECTIONS` | `10` | Concurrent connections per scenario |
+| `LOAD_TIMEOUT_SECONDS` | `10` | Request timeout |
+| `LOAD_AUTH_TOKEN` | unset | Optional bearer token for protected endpoints |
+| `LOAD_ESCROW_INVOICE_ID` | `placeholder-invoice` | Escrow fixture id |
+| `LOAD_REPORT_DIR` | `tests/load/reports` | Directory for generated reports |
+
+### How to run
+
+```bash
+npm run dev
+npm run load:baseline
+```
+
+### Security notes
+
+- Remote load targets are blocked by default.
+- Secrets and tokens must come from environment variables.
+- The suite never prints auth tokens.
+- The selected baseline endpoints are low-risk reads.
+
+---
+
+## Structured API errors
+
+All API failures return a structured error payload:
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Malformed JSON request body.",
+    "correlation_id": "req_f7d1b9f6c0f1459d8b3b7b6a",
+    "retryable": false,
+    "retry_hint": "Fix the JSON payload and try again."
+  }
+}
+```
+
+### Current error categories
+
+- `VALIDATION_ERROR`
+- `AUTHENTICATION_REQUIRED`
+- `INVALID_TOKEN`
+- `FORBIDDEN`
+- `NOT_FOUND`
+- `RATE_LIMITED`
+- `UPSTREAM_ERROR`
+- `INTERNAL_SERVER_ERROR`
+
+### Security notes
+
+- Internal stack traces and raw exception details are never returned to clients.
+- Correlation IDs are sanitized.
+- Retry hints are generic and do not leak infrastructure details.
+
+---
+
+## Negative middleware security tests
+
+The repo includes a focused negative security test suite for middleware hardening.
+
+### Scenarios covered
+
+- unauthorized requests with no `Authorization` header
+- malformed `Authorization` header formats
+- invalid or tampered Bearer tokens
+- rate-limited abuse against a representative protected endpoint
+- non-leakage checks for error bodies and headers
+- public-route behavior when malformed auth headers are present
 
 GitHub Actions runs on push and pull requests to `main`:
 

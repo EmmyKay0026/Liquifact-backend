@@ -369,7 +369,6 @@ describe('isCorsOriginRejectedError()', () => {
 describe('createCorsOptions()', () => {
   let savedEnv;
   beforeEach(() => { savedEnv = { ...process.env }; });
-  // eslint-disable-next-line no-undef
   afterEach(() => {
     process.env.CORS_ALLOWED_ORIGINS = savedEnv.CORS_ALLOWED_ORIGINS;
     process.env.NODE_ENV             = savedEnv.NODE_ENV;
