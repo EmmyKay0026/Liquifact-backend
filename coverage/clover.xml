@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<<<<<<< HEAD
 <coverage generated="1774342700723" clover="3.2.0">
   <project timestamp="1774342700724" name="All files">
     <metrics statements="31" coveredstatements="31" conditionals="13" coveredconditionals="13" methods="10" coveredmethods="10" elements="54" coveredelements="54" complexity="0" loc="31" ncloc="31" packages="2" files="2" classes="2"/>
@@ -85,7 +84,6 @@
         <line num="62" count="16" type="stmt"/>
         <line num="63" count="16" type="stmt"/>
         <line num="68" count="2" type="stmt"/>
->>>>>>> main
       </file>
     </package>
   </project>

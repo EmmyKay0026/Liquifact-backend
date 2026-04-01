@@ -1,6 +1,8 @@
 'use strict';
 
 /**
+ * Express server bootstrap for invoice financing, auth, and Stellar integration.
+ */
  * Express app configuration for invoice financing, auth, and Stellar integration.
  * Server startup lives in this module for local runs; tests can import the app directly.
  */
@@ -12,6 +14,8 @@ require('dotenv').config();
 const { createSecurityMiddleware } = require('./middleware/security');
 const { globalLimiter, sensitiveLimiter } = require('./middleware/rateLimit');
 const { authenticateToken } = require('./middleware/auth');
+const asyncHandler = require('./utils/asyncHandler');
+const errorHandler = require('./middleware/errorHandler');
 const { callSorobanContract } = require('./services/soroban');
 const AppError = require('./errors/AppError');
 

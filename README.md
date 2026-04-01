@@ -157,6 +157,22 @@ By default, reports are written to:
 ```text
 tests/load/reports/
 ```
+│   ├── config/
+│   │   └── cors.js     # CORS allowlist parsing and policy
+│   ├── services/
+│   │   └── soroban.js  # Contract interaction wrappers
+│   ├── utils/
+│   │   └── retry.js    # Exponential backoff utility
+│   ├── app.js          # Express app, middleware, routes
+│   └── index.js        # Runtime bootstrap
+├── .env.example        # Env template
+├── eslint.config.js
+└── package.json
+```
+
+---
+
+## Resiliency & Retries
 
 ### Security notes
 
