@@ -60,6 +60,30 @@ function computeBackoff(attempt, baseDelay, maxDelay) {
 }
 
 /**
+ * Determines whether an error is transient based on its message string.
+ *
+ * Checks for common transient error indicators: timeouts, rate-limits, and
+ * 5xx / 429 HTTP status codes mentioned in the message.
+ *
+ * @param {unknown} err - Error to inspect.
+ * @returns {boolean} `true` when the error message signals a transient fault.
+ */
+function isTransientError(err) {
+  if (!err || !err.message) { return false; }
+  const msg = err.message.toLowerCase();
+  return (
+    msg.includes('timeout') ||
+    msg.includes('rate limit') ||
+    msg.includes('429') ||
+    msg.includes('502') ||
+    msg.includes('503') ||
+    msg.includes('504') ||
+    msg.includes('service unavailable') ||
+    msg.includes('bad gateway')
+  );
+}
+
+/**
  * Determines whether an error from a Soroban call is transient and should
  * trigger a retry.
  *
@@ -136,6 +160,7 @@ async function withRetry(operation, config) {
  *
  * @template T
  * @param {() => Promise<T>} operation - Async function wrapping the contract call.
+ * @param {Object} [config] - Optional retry configuration overrides.
  * @returns {Promise<T>} Result of the contract call.
  *
  * @example
@@ -143,8 +168,9 @@ async function withRetry(operation, config) {
  *   client.invokeContract('get_escrow_state', [invoiceId])
  * );
  */
-async function callSorobanContract(operation) {
-  return withRetry(operation, SOROBAN_RETRY_CONFIG);
+async function callSorobanContract(operation, config) {
+  const cfg = config ? { ...SOROBAN_RETRY_CONFIG, ...config } : SOROBAN_RETRY_CONFIG;
+  return withRetry(operation, cfg);
 }
 
 module.exports = {
@@ -152,6 +178,7 @@ module.exports = {
   withRetry,
   computeBackoff,
   isRetryable,
+  isTransientError,
   SOROBAN_RETRY_CONFIG,
   RETRYABLE_STATUS_CODES,
 };

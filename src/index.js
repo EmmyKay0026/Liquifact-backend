@@ -232,6 +232,9 @@ const app = createApp({ enableTestRoutes: process.env.NODE_ENV === 'test' });
 
 // ─── Server lifecycle ─────────────────────────────────────────────────────────
 
+// RFC 7807 error handler — handles AppError + generic errors.
+app.use(errorHandler);
+
 /**
  * Starts the Express server.
  *

@@ -100,7 +100,9 @@ module.exports = app;
 require('dotenv').config();
 
 const { callSorobanContract }               = require('./services/soroban');
+const invoiceService                        = require('./services/invoice.service');
 const { createCorsOptions, isCorsOriginRejectedError } = require('./config/cors');
+const { validateInvoiceQueryParams }                  = require('./utils/validators');
 const {
   jsonBodyLimit,
   urlencodedBodyLimit,
@@ -185,10 +187,15 @@ function createApp() {
   });
 
   // Invoices — GET (list)
-  app.get('/api/invoices', (req, res) => {
+  app.get('/api/invoices', async (req, res) => {
+    const { isValid, errors, validatedParams } = validateInvoiceQueryParams(req.query);
+    if (!isValid) {
+      return res.status(400).json({ errors });
+    }
+    const invoices = await invoiceService.getInvoices(validatedParams);
     res.json({
-      data:    [],
-      message: 'Invoice service will list tokenized invoices here.',
+      data:    invoices,
+      message: 'Invoices retrieved successfully.',
     });
   });
 
