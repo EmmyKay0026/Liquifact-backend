@@ -1,5 +1,6 @@
 const request = require('supertest');
-const { app, resetStore } = require('../index');
+const app = require('../index');
+const { resetStore } = app;
 
 describe('Escrow Cache Integration', () => {
   beforeEach(() => {

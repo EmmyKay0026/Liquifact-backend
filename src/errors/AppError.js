@@ -14,7 +14,7 @@ class AppError extends Error {
    * @param {string} [params.instance] - A URI reference that identifies the specific occurrence of the problem.
    * @returns {AppError}
    */
-  constructor({ type, title, status, detail, instance }) {
+  constructor({ type, title, status, detail, instance, code, retryable, retryHint }) {
     super(title);
     this.name = this.constructor.name;
     this.type = type || 'about:blank';
@@ -22,6 +22,9 @@ class AppError extends Error {
     this.status = status || 500;
     this.detail = detail;
     this.instance = instance;
+    this.code = code;
+    this.retryable = retryable;
+    this.retryHint = retryHint;
 
     // Capture stack trace, excluding constructor call from it
     Error.captureStackTrace(this, this.constructor);

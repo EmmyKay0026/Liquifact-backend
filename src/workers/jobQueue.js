@@ -263,11 +263,17 @@ class JobQueue {
     };
 
     for (const job of this.jobs.values()) {
-      if (job.status === JOB_STATUS.PENDING) stats.pending += 1;
-      else if (job.status === JOB_STATUS.PROCESSING) stats.processing += 1;
-      else if (job.status === JOB_STATUS.COMPLETED) stats.completed += 1;
-      else if (job.status === JOB_STATUS.FAILED) stats.failed += 1;
-      else if (job.status === JOB_STATUS.RETRYING) stats.retrying += 1;
+      if (job.status === JOB_STATUS.PENDING) {
+        stats.pending += 1;
+      } else if (job.status === JOB_STATUS.PROCESSING) {
+        stats.processing += 1;
+      } else if (job.status === JOB_STATUS.COMPLETED) {
+        stats.completed += 1;
+      } else if (job.status === JOB_STATUS.FAILED) {
+        stats.failed += 1;
+      } else if (job.status === JOB_STATUS.RETRYING) {
+        stats.retrying += 1;
+      }
     }
 
     return stats;

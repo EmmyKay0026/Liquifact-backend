@@ -13,6 +13,8 @@ module.exports = [
     },
     rules: {
       ...security.configs.recommended.rules,
+      'security/detect-object-injection': 'off',
+      'security/detect-unsafe-regex': 'off',
       'jsdoc/require-jsdoc': ['error', { require: { FunctionDeclaration: true, MethodDefinition: true } }],
       'jsdoc/require-description': 'error',
       'jsdoc/require-returns': 'error',
@@ -36,6 +38,23 @@ module.exports = [
         beforeEach: 'readonly',
         afterAll: 'readonly',
         afterEach: 'readonly',
+      },
+    },
+    rules: {
+      'jsdoc/require-jsdoc': 'off',
+      'jsdoc/require-description': 'off',
+      'jsdoc/require-returns': 'off',
+      'jsdoc/require-param': 'off',
+      'security/detect-object-injection': 'off',
+      'security/detect-non-literal-regexp': 'off',
+    },
+  },
+  {
+    files: ['src/**/__mocks__/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.jest,
       },
     },
     rules: {

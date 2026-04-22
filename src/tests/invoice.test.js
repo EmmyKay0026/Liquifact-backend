@@ -30,7 +30,6 @@ describe('API Gateway', () => {
 
 describe('GET /api/invoices/:id', () => {
   const userId = 'user_1';
-  const otherUserId = 'user_2';
 
   it('should return 200 and the invoice when found and authorized', async () => {
     const existingInvoice = mockInvoices.find(inv => inv.ownerId === userId);

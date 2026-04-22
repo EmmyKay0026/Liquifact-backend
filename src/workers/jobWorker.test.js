@@ -123,13 +123,13 @@ describe('JobQueue', () => {
     });
 
     it('should set job status to PROCESSING on dequeue', () => {
-      const jobId = queue.enqueue('test', { data: 'test' });
+      queue.enqueue('test', { data: 'test' });
       const job = queue.dequeue();
       expect(job.status).toBe(JOB_STATUS.PROCESSING);
     });
 
     it('should increment attempts on dequeue', () => {
-      const jobId = queue.enqueue('test', { data: 'test' });
+      queue.enqueue('test', { data: 'test' });
       const job = queue.dequeue();
       expect(job.attempts).toBe(1);
     });
@@ -258,7 +258,7 @@ describe('JobQueue', () => {
       const jobId = queue.enqueue('test', { data: 'test' });
 
       for (let i = 0; i < 2; i++) {
-        const job = queue.dequeue();
+        queue.dequeue();
         const beforeRetry = Date.now();
         queue.retry(jobId, new Error(`Failure ${i}`));
         
@@ -377,8 +377,8 @@ describe('JobQueue', () => {
     });
 
     it('should count processing jobs', () => {
-      const id1 = queue.enqueue('test', { data: 1 });
-      const id2 = queue.enqueue('test', { data: 2 });
+      queue.enqueue('test', { data: 1 });
+      queue.enqueue('test', { data: 2 });
 
       queue.dequeue();
       queue.dequeue();

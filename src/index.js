@@ -9,9 +9,6 @@
  *   - Every invoice read/write delegates to the tenant-aware repository so
  *     that no tenant can ever observe or mutate another tenant's data.
  */
- * Express app configuration for invoice financing, auth, and Stellar integration.
- * Server startup lives in this module for local runs; tests can import the app directly.
- */
 
 const express = require('express');
 const cors = require('cors');
@@ -20,16 +17,10 @@ require('dotenv').config();
 const { createSecurityMiddleware } = require('./middleware/security');
 const { globalLimiter, sensitiveLimiter } = require('./middleware/rateLimit');
 const { authenticateToken } = require('./middleware/auth');
-const asyncHandler = require('./utils/asyncHandler');
 const errorHandler = require('./middleware/errorHandler');
-const { authenticateToken } = require('./middleware/auth');
-const { globalLimiter, sensitiveLimiter } = require('./middleware/rateLimit');
-const { sanitizeInput } = require('./middleware/sanitizeInput');
-const { createSecurityMiddleware } = require('./middleware/security');
 const { callSorobanContract } = require('./services/soroban');
 const AppError = require('./errors/AppError');
 
-const app = express();
 const PORT = process.env.PORT || 3001;
 
 // In-memory storage for invoices (Issue #25).
@@ -84,7 +75,7 @@ function createApp(options = {}) {
     });
   });
 
-  app.post('/api/invoices', sensitiveLimiter, authenticateToken, (req, res) => {
+  app.post('/api/invoices', authenticateToken, sensitiveLimiter, (req, res) => {
     const { amount, customer } = req.body;
 
     if (!amount || !customer) {
@@ -116,17 +107,17 @@ function createApp(options = {}) {
       return res.status(404).json({ error: 'Invoice not found' });
     }
 
-    // eslint-disable-next-line security/detect-object-injection
+     
     if (invoices[invoiceIndex].deletedAt) {
       return res.status(400).json({ error: 'Invoice is already deleted' });
     }
 
-    // eslint-disable-next-line security/detect-object-injection
+     
     invoices[invoiceIndex].deletedAt = new Date().toISOString();
 
     return res.json({
       message: 'Invoice soft-deleted successfully.',
-      // eslint-disable-next-line security/detect-object-injection
+       
       data: invoices[invoiceIndex],
     });
   });
@@ -139,17 +130,17 @@ function createApp(options = {}) {
       return res.status(404).json({ error: 'Invoice not found' });
     }
 
-    // eslint-disable-next-line security/detect-object-injection
+     
     if (!invoices[invoiceIndex].deletedAt) {
       return res.status(400).json({ error: 'Invoice is not deleted' });
     }
 
-    // eslint-disable-next-line security/detect-object-injection
+     
     invoices[invoiceIndex].deletedAt = null;
 
     return res.status(200).json({
       message: 'Invoice restored successfully.',
-      // eslint-disable-next-line security/detect-object-injection
+       
       data: invoices[invoiceIndex],
     });
   });
@@ -225,11 +216,6 @@ function createApp(options = {}) {
     );
   });
 
-  app.use((err, req, res, _next) => {
-    console.error(err);
-    return res.status(err.status || 500).json({ error: 'Internal server error' });
-  });
-
   return app;
 }
 
@@ -257,9 +243,9 @@ const startServer = () => {
  *
  * @returns {void}
  */
-// const resetStore = () => {
-//   invoices = [];
-// };
+function resetStore() {
+  invoices.length = 0;
+}
 
 if (process.env.NODE_ENV !== 'test') {
   startServer();
@@ -269,4 +255,3 @@ module.exports = app;
 module.exports.createApp = createApp;
 module.exports.startServer = startServer;
 module.exports.resetStore = resetStore;
-module.exports.startServer = startServer;

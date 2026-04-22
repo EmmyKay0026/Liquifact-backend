@@ -440,6 +440,7 @@ describe('computeBackoff()', () => {
     expect(computeBackoff(0, 200, 5000)).toBeGreaterThanOrEqual(0);
   });
   it('increases with attempt number', () => {
+    const d0 = computeBackoff(0, 200, 5000);
     const d3 = computeBackoff(3, 200, 5000);
     expect(d3).toBeGreaterThanOrEqual(d0);
     expect(d3).toBeLessThanOrEqual(5000);
@@ -614,7 +615,15 @@ describe('createApp() integration', () => {
     const res = await request(app)
       .post('/api/invoices')
       .set('Content-Type', 'application/json')
-      .send(JSON.stringify({ amount: 100, currency: 'USD' }));
+      .send(
+        JSON.stringify({
+          amount: 100,
+          dueDate: '2030-01-15',
+          buyer: 'Buyer Co',
+          seller: 'Seller Co',
+          currency: 'USD',
+        })
+      );
     expect(res.status).toBe(201);
     expect(res.body.data.id).toBe('placeholder');
   });

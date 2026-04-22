@@ -10,16 +10,6 @@
 
 'use strict';
 
-const { CircuitBreaker } = require('../utils/circuitBreaker');
-
-/**
- * Circuit breaker instance for Soroban API calls.
- */
-const sorobanCircuitBreaker = new CircuitBreaker({
-  failureThreshold: 5,
-  recoveryTimeout: 15000,
-});
-
 /**
  * Retry configuration used for all Soroban contract calls.
  *
@@ -78,21 +68,6 @@ function computeBackoff(attempt, baseDelay, maxDelay) {
  * @param {unknown} err - Error to inspect.
  * @returns {boolean} `true` when the error message signals a transient fault.
  */
-function isTransientError(err) {
-  if (!err || !err.message) { return false; }
-  const msg = err.message.toLowerCase();
-  return (
-    msg.includes('timeout') ||
-    msg.includes('rate limit') ||
-    msg.includes('429') ||
-    msg.includes('502') ||
-    msg.includes('503') ||
-    msg.includes('504') ||
-    msg.includes('service unavailable') ||
-    msg.includes('bad gateway')
-  );
-}
-
 /**
  * Determines whether an error from a Soroban call is transient and should
  * trigger a retry.
@@ -117,7 +92,7 @@ function isRetryable(err) {
 }
 
 /**
- * Backward-compatible transient error detector based on message patterns.
+ * Transient error detector based on message patterns (timeouts, rate limits, 5xx).
  *
  * @param {unknown} err - Error thrown by the operation.
  * @returns {boolean} True if message implies transient failure.
@@ -131,7 +106,12 @@ function isTransientError(err) {
     message.includes('etimedout') ||
     message.includes('network') ||
     message.includes('503') ||
-    message.includes('429')
+    message.includes('429') ||
+    message.includes('rate limit') ||
+    message.includes('502') ||
+    message.includes('504') ||
+    message.includes('service unavailable') ||
+    message.includes('bad gateway')
   );
 }
 
@@ -208,7 +188,6 @@ module.exports = {
   computeBackoff,
   isTransientError,
   isRetryable,
-  isTransientError,
   SOROBAN_RETRY_CONFIG,
   RETRYABLE_STATUS_CODES,
 };

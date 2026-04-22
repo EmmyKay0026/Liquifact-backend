@@ -32,10 +32,10 @@ function getActorFromRequest(req) {
  * Attempts to parse standard REST patterns like /api/{resourceType}/{id}
  * 
  * @param {string} path Request path
- * @param {string} method HTTP method
+ * @param {string} [_method] HTTP method (reserved for future routing rules).
  * @returns {Object} Object with resourceType and resourceId
  */
-function extractResourceInfo(path, method) {
+function extractResourceInfo(path, _method) {
   // Pattern: /api/{resourceType}/{id} or /api/{resourceType}
   const match = path.match(/^\/api\/([a-z]+)(?:\/([a-zA-Z0-9-]+))?/);
 
@@ -128,14 +128,15 @@ function auditMiddleware(req, res, next) {
   const originalSend = res.send;
   const originalStatus = res.status;
 
-  let responseBody = null;
   let storedStatusCode = res.statusCode;
 
   /**
    * Captures response and creates audit log.
+   *
+   * @param {unknown} body - Serialized response body.
+   * @returns {unknown} The same body for chaining.
    */
   const captureResponse = (body) => {
-    responseBody = body;
     const statusCode = storedStatusCode || res.statusCode;
     // Only create audit log for successful responses (2xx status codes)
     const wasSuccessful = statusCode >= 200 && statusCode < 300;

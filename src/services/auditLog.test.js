@@ -588,7 +588,7 @@ describe('auditLog Service', () => {
     });
 
     it('should never expose sensitive data in logs', () => {
-      const entry = createAuditLog({
+      createAuditLog({
         actor: 'user-1',
         action: 'CREATE',
         resourceType: 'invoice',

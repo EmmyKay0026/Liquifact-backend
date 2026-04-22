@@ -270,8 +270,9 @@ describe('LiquiFact app integration', () => {
       description: 'Global Invoice Liquidity Network on Stellar',
       endpoints: {
         health: 'GET /health',
+        ready: 'GET /ready',
         invoices: 'GET/POST /api/invoices',
-        escrow: 'GET/POST /api/escrow',
+        escrow: 'GET /api/escrow/:invoiceId',
       },
     });
   });

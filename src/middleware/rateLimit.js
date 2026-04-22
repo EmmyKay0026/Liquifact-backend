@@ -3,7 +3,7 @@
  * Protects endpoints from abuse and DoS using IP and token-based limiting.
  */
 
-const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
+const rateLimit = require('express-rate-limit');
 
 /**
  * Standard global rate limiter for all API endpoints.
@@ -26,7 +26,10 @@ const globalLimiter = rateLimit({
    * @returns {string} The rate-limit key.
    */
   keyGenerator: (req) => {
-    return req.user ? `user_${req.user.id}` : ipKeyGenerator(req.ip);
+    if (req.user) {
+      return `user_${req.user.id}`;
+    }
+    return req.ip || req.socket?.remoteAddress || '127.0.0.1';
   },
 });
 
@@ -38,7 +41,7 @@ const globalLimiter = rateLimit({
  */
 const sensitiveLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  limit: 10,
+  limit: 40,
   message: {
     error: 'Strict rate limit exceeded for sensitive operations. Please try again later.',
   },
@@ -51,7 +54,10 @@ const sensitiveLimiter = rateLimit({
    * @returns {string} The rate-limit key.
    */
   keyGenerator: (req) => {
-    return req.user ? `user_${req.user.id}` : ipKeyGenerator(req.ip);
+    if (req.user) {
+      return `user_${req.user.id}`;
+    }
+    return req.ip || req.socket?.remoteAddress || '127.0.0.1';
   },
 });
 

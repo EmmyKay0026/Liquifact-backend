@@ -48,14 +48,14 @@ function getDevelopmentFallbackOrigins() {
 
 /**
  * Parses `CORS_ALLOWED_ORIGINS` into a trimmed, de-duplicated array of origin
- * strings.  Returns `[]` when the value is absent or blank.
+ * strings. Returns `[]` when the value is absent or blank.
  *
  * @param {string|undefined} raw - Raw value of the environment variable.
  * @returns {string[]} Array of allowed origins (empty when unset).
  */
 function parseAllowedOrigins(raw) {
   if (!raw || raw.trim() === '') {
-    return null;
+    return [];
   }
   return [
     ...new Set(
@@ -68,28 +68,29 @@ function parseAllowedOrigins(raw) {
 }
 
 /**
- * Resolves the effective origin allowlist from the given environment object.
+ * Resolves the allowlist from an environment map.
  *
- * @returns {string[]|null} Allowlist to enforce, or `null` meaning "deny all
- * browser origins" (production with no env var set).
+ * @param {NodeJS.ProcessEnv} [env=process.env] - Environment variable map.
+ * @returns {string[]} Origins to allow for browser requests with an Origin header.
  */
-function resolveAllowlist() {
-  const fromEnv = parseAllowedOrigins(process.env.CORS_ALLOWED_ORIGINS);
-  if (fromEnv !== null) {
+function getAllowedOriginsFromEnv(env = process.env) {
+  const fromEnv = parseAllowedOrigins(env.CORS_ALLOWED_ORIGINS);
+  if (fromEnv.length > 0) {
     return fromEnv;
   }
-
-  if (process.env.NODE_ENV === 'development') {
-    return DEV_DEFAULT_ORIGINS;
+  if (env.NODE_ENV === 'development') {
+    return getDevelopmentFallbackOrigins();
   }
+  return [];
+}
 
 /**
- * Resolves the effective origin allowlist given the current environment.
+ * Resolves the effective origin allowlist from the given environment object.
  *
- * @param {Object} [env=process.env] - Environment variable map.
+ * @param {NodeJS.ProcessEnv} [env=process.env] - Environment variable map.
  * @returns {string[]} Allowlist to enforce.
  */
-function resolveAllowlist(env) {
+function resolveAllowlist(env = process.env) {
   return getAllowedOriginsFromEnv(env);
 }
 
@@ -106,7 +107,6 @@ function createCorsRejectionError(_origin) {
   err.isCorsOriginRejected = true;
   err.isCorsOriginRejectedError = true;
   err.status = 403;
-  err.origin = origin;
   return err;
 }
 
@@ -128,7 +128,7 @@ function isCorsOriginRejectedError(err) {
  * allowlist. It calls `callback(null, true)` to approve an origin, and
  * `callback(err)` with the rejection error to deny it.
  *
- * @param {Object} [env=process.env] - Environment variable map (for testing).
+ * @param {NodeJS.ProcessEnv} [env=process.env] - Environment variable map (for testing).
  * @returns {import('cors').CorsOptions} Options ready to pass to `cors()`.
  *
  * @example
@@ -136,8 +136,8 @@ function isCorsOriginRejectedError(err) {
  * const { createCorsOptions } = require('./config/cors');
  * app.use(cors(createCorsOptions()));
  */
-function createCorsOptions(env) {
-  const allowlist = getAllowedOriginsFromEnv(env || process.env);
+function createCorsOptions(env = process.env) {
+  const allowlist = getAllowedOriginsFromEnv(env);
 
   return {
     /**
@@ -148,12 +148,10 @@ function createCorsOptions(env) {
      * @returns {void}
      */
     origin(origin, callback) {
-      // Non-browser requests (no Origin header) are always allowed.
       if (origin === undefined) {
         return callback(null, true);
       }
 
-      // No allowlist configured → deny all browser origins.
       if (allowlist.length === 0) {
         return callback(createCorsRejectionError(origin));
       }
@@ -165,7 +163,6 @@ function createCorsOptions(env) {
       return callback(createCorsRejectionError(origin));
     },
 
-    // Expose the standard headers clients need.
     optionsSuccessStatus: 204,
   };
 }
@@ -180,5 +177,4 @@ module.exports = {
   isCorsOriginRejectedError,
   parseAllowedOrigins,
   resolveAllowlist,
-  DEV_DEFAULT_ORIGINS,
 };

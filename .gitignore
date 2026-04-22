@@ -109,3 +109,19 @@ Thumbs.db
 
 # Target (from incoming commit)
 .target
+
+# Lockfile (install with npm install; CI does not rely on a committed lockfile)
+package-lock.json
+
+# Local scratch / merge artifacts
+*_out.txt
+merge_out*.txt
+conflicts.txt
+branches.txt
+test-output.txt
+test_output.txt
+
+# Environment (never commit secrets)
+.env
+.env.*
+!.env.example

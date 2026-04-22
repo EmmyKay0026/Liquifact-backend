@@ -2,7 +2,7 @@
  * Tests for centralized config module.
  */
 
-const { validate, get, ConfigSchema } = require('./index');
+const { validate, ConfigSchema } = require('./index');
 
 describe('Config Validation', () => {
   const originalEnv = { ...process.env };
@@ -53,16 +53,17 @@ describe('Config Validation', () => {
   });
 
   test('get() throws if not validated', () => {
-    // Mock to clear config
-    jest.doMock('./index', () => ({ config: null, get: () => { throw new Error('unvalidated'); } }));
-    expect(() => get()).toThrow('not validated');
+    jest.isolateModules(() => {
+      const { get: getFresh } = require('./index');
+      expect(() => getFresh()).toThrow(/validated/i);
+    });
   });
 
   test('schema type safety', () => {
     const result = ConfigSchema.parse({
       NODE_ENV: 'test',
       PORT: 3001,
-      JWT_SECRET: 'valid-secret',
+      JWT_SECRET: '0123456789abcdef0123456789abcdef',
     });
     expect(result).toMatchObject({ NODE_ENV: 'test', PORT: 3001 });
   });

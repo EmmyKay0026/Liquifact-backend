@@ -44,7 +44,7 @@ function authenticateApiKey(options = {}) {
   const { requiredScope, env = process.env } = options;
 
   return (req, res, next) => {
-    // eslint-disable-next-line security/detect-object-injection
+     
     const rawKey = req.headers[API_KEY_HEADER];
 
     if (!rawKey || typeof rawKey !== 'string' || rawKey.trim() === '') {

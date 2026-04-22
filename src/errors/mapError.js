@@ -1,4 +1,26 @@
-const { AppError } = require('./AppError');
+const AppError = require('./AppError');
+
+/**
+ * Default error code label from HTTP status when AppError has no explicit code.
+ *
+ * @param {number} status - HTTP status.
+ * @returns {string}
+ */
+function httpStatusToCode(status) {
+  if (status === 400) {
+    return 'BAD_REQUEST';
+  }
+  if (status === 401) {
+    return 'UNAUTHORIZED';
+  }
+  if (status === 403) {
+    return 'FORBIDDEN';
+  }
+  if (status === 404) {
+    return 'NOT_FOUND';
+  }
+  return `HTTP_${status}`;
+}
 
 /**
  * Map framework and application errors into a stable HTTP error contract.
@@ -10,10 +32,10 @@ function mapError(error) {
   if (error instanceof AppError) {
     return {
       status: error.status,
-      code: error.code,
-      message: error.expose ? error.message : 'An internal server error occurred.',
-      retryable: error.retryable,
-      retryHint: error.retryHint,
+      code: error.code || httpStatusToCode(error.status),
+      message: error.detail || error.message,
+      retryable: error.retryable ?? false,
+      retryHint: error.retryHint ?? '',
     };
   }
 

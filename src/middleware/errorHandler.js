@@ -1,4 +1,4 @@
-const { AppError } = require('../errors/AppError');
+const AppError = require('../errors/AppError');
 const { mapError } = require('../errors/mapError');
 
 /**
@@ -12,11 +12,11 @@ const { mapError } = require('../errors/mapError');
 function notFoundHandler(req, _res, next) {
   next(
     new AppError({
+      type: 'https://liquifact.com/probs/not-found',
+      title: 'Not Found',
       status: 404,
-      code: 'NOT_FOUND',
-      message: `Route ${req.method} ${req.path} was not found.`,
-      retryable: false,
-      retryHint: 'Verify the request path and method before trying again.',
+      detail: `Route ${req.method} ${req.path} was not found.`,
+      instance: req.originalUrl,
     }),
   );
 }
@@ -63,8 +63,7 @@ function logError(error, correlationId) {
   console.error(`[${correlationId}] ${message}`);
 }
 
-module.exports = {
-  notFoundHandler,
-  errorHandler,
-  logError,
-};
+module.exports = errorHandler;
+module.exports.errorHandler = errorHandler;
+module.exports.notFoundHandler = notFoundHandler;
+module.exports.logError = logError;

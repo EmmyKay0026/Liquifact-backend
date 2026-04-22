@@ -13,7 +13,6 @@
  */
 
 const JobQueue = require('./jobQueue');
-const { JOB_STATUS } = require('./jobQueue');
 
 /**
  * Background worker that processes queued jobs
@@ -121,7 +120,7 @@ class BackgroundWorker {
     // Wait for in-flight jobs to complete
     const startTime = Date.now();
     while (this.processingCount > 0 && Date.now() - startTime < timeoutMs) {
-      await new Promise((resolve) => setTimeout(resolve, 100)); // eslint-disable-line no-await-in-loop
+      await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     if (this.processingCount > 0) {

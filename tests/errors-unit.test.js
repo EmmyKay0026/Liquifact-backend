@@ -1,73 +1,77 @@
-const test = require('node:test');
-const assert = require('node:assert/strict');
-
-const { AppError } = require('../src/errors/AppError');
+const AppError = require('../src/errors/AppError');
 const { mapError, isBodyParserSyntaxError } = require('../src/errors/mapError');
 const { logError } = require('../src/middleware/errorHandler');
 
-test('mapError preserves AppError metadata', () => {
-  const mapped = mapError(
-    new AppError({
+describe('mapError', () => {
+  it('preserves AppError metadata', () => {
+    const mapped = mapError(
+      new AppError({
+        type: 'https://liquifact.com/probs/conflict',
+        title: 'Conflict',
+        status: 409,
+        detail: 'Conflict happened.',
+        instance: '/api/invoices/1',
+        code: 'CONFLICT',
+        retryable: false,
+        retryHint: 'Resolve the conflict and try again.',
+      }),
+    );
+
+    expect(mapped).toEqual({
       status: 409,
       code: 'CONFLICT',
       message: 'Conflict happened.',
       retryable: false,
       retryHint: 'Resolve the conflict and try again.',
-    }),
-  );
+    });
+  });
 
-  assert.deepEqual(mapped, {
-    status: 409,
-    code: 'CONFLICT',
-    message: 'Conflict happened.',
-    retryable: false,
-    retryHint: 'Resolve the conflict and try again.',
+  it('recognizes body parser syntax errors', () => {
+    const mapped = mapError({
+      type: 'entity.parse.failed',
+      status: 400,
+    });
+
+    expect(mapped.code).toBe('VALIDATION_ERROR');
+    expect(isBodyParserSyntaxError({ type: 'entity.parse.failed', status: 400 })).toBe(true);
+    expect(isBodyParserSyntaxError({})).toBe(false);
+  });
+
+  it('recognizes upstream connection failures', () => {
+    const error = new Error('upstream refused');
+    error.code = 'ECONNREFUSED';
+    const mapped = mapError(error);
+
+    expect(mapped.code).toBe('UPSTREAM_ERROR');
+    expect(mapped.retryable).toBe(true);
+  });
+
+  it('sanitizes unknown errors', () => {
+    const mapped = mapError(new Error('secret detail'));
+
+    expect(mapped).toEqual({
+      status: 500,
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'An internal server error occurred.',
+      retryable: false,
+      retryHint: 'Do not retry until the issue is resolved or support is contacted.',
+    });
   });
 });
 
-test('mapError recognizes body parser syntax errors', () => {
-  const mapped = mapError({
-    type: 'entity.parse.failed',
-    status: 400,
+describe('logError', () => {
+  it('handles non-error values safely', () => {
+    const messages = [];
+    const original = console.error;
+    console.error = (value) => messages.push(value);
+
+    try {
+      logError('boom', 'req_test123');
+    } finally {
+      console.error = original;
+    }
+
+    expect(messages.length).toBe(1);
+    expect(messages[0]).toMatch(/\[req_test123\] Non-error value thrown/);
   });
-
-  assert.equal(mapped.code, 'VALIDATION_ERROR');
-  assert.equal(isBodyParserSyntaxError({ type: 'entity.parse.failed', status: 400 }), true);
-  assert.equal(isBodyParserSyntaxError({}), false);
-});
-
-test('mapError recognizes upstream connection failures', () => {
-  const error = new Error('upstream refused');
-  error.code = 'ECONNREFUSED';
-  const mapped = mapError(error);
-
-  assert.equal(mapped.code, 'UPSTREAM_ERROR');
-  assert.equal(mapped.retryable, true);
-});
-
-test('mapError sanitizes unknown errors', () => {
-  const mapped = mapError(new Error('secret detail'));
-
-  assert.deepEqual(mapped, {
-    status: 500,
-    code: 'INTERNAL_SERVER_ERROR',
-    message: 'An internal server error occurred.',
-    retryable: false,
-    retryHint: 'Do not retry until the issue is resolved or support is contacted.',
-  });
-});
-
-test('logError handles non-error values safely', () => {
-  const messages = [];
-  const original = console.error;
-  console.error = (value) => messages.push(value);
-
-  try {
-    logError('boom', 'req_test123');
-  } finally {
-    console.error = original;
-  }
-
-  assert.equal(messages.length, 1);
-  assert.match(messages[0], /\[req_test123\] Non-error value thrown/);
 });

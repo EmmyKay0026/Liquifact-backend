@@ -1,6 +1,3 @@
-const test = require('node:test');
-const assert = require('node:assert/strict');
-
 const {
   DEFAULT_BASE_URL,
   loadLoadTestConfig,
@@ -10,59 +7,69 @@ const {
   parsePositiveInteger,
 } = require('./config');
 
-test('loadLoadTestConfig uses safe defaults', () => {
-  const config = loadLoadTestConfig({});
+describe('loadLoadTestConfig', () => {
+  it('uses safe defaults', () => {
+    const config = loadLoadTestConfig({});
 
-  assert.equal(config.baseUrl, DEFAULT_BASE_URL);
-  assert.equal(config.durationSeconds, 15);
-  assert.equal(config.connections, 10);
-  assert.equal(config.timeoutSeconds, 10);
-  assert.equal(config.authToken, null);
-  assert.equal(config.escrowInvoiceId, 'placeholder-invoice');
-});
-
-test('loadLoadTestConfig rejects remote targets by default', () => {
-  assert.throws(
-    () => loadLoadTestConfig({ LOAD_BASE_URL: 'https://api.example.com' }),
-    /Remote load targets are blocked by default/,
-  );
-});
-
-test('loadLoadTestConfig allows remote targets with explicit opt-in', () => {
-  const config = loadLoadTestConfig({
-    LOAD_BASE_URL: 'https://api.example.com',
-    ALLOW_REMOTE_LOAD_BASELINES: 'true',
+    expect(config.baseUrl).toBe(DEFAULT_BASE_URL);
+    expect(config.durationSeconds).toBe(15);
+    expect(config.connections).toBe(10);
+    expect(config.timeoutSeconds).toBe(10);
+    expect(config.authToken).toBeNull();
+    expect(config.escrowInvoiceId).toBe('placeholder-invoice');
   });
 
-  assert.equal(config.baseUrl, 'https://api.example.com');
-});
-
-test('getLoadScenarios builds the canonical endpoint set', () => {
-  const scenarios = getLoadScenarios({
-    authToken: 'secret',
-    escrowInvoiceId: 'invoice-123',
+  it('rejects remote targets by default', () => {
+    expect(() => loadLoadTestConfig({ LOAD_BASE_URL: 'https://api.example.com' })).toThrow(
+      /Remote load targets are blocked by default/,
+    );
   });
 
-  assert.deepEqual(
-    scenarios.map((scenario) => scenario.path),
-    ['/health', '/api/invoices', '/api/escrow/invoice-123'],
-  );
-  assert.match(scenarios[1].headers.Authorization, /^Bearer /);
+  it('allows remote targets with explicit opt-in', () => {
+    const config = loadLoadTestConfig({
+      LOAD_BASE_URL: 'https://api.example.com',
+      ALLOW_REMOTE_LOAD_BASELINES: 'true',
+    });
+
+    expect(config.baseUrl).toBe('https://api.example.com');
+  });
 });
 
-test('buildAuthHeaders omits authorization when no token is provided', () => {
-  assert.deepEqual(buildAuthHeaders(null), {});
-  assert.deepEqual(buildAuthHeaders('abc'), { Authorization: 'Bearer abc' });
+describe('getLoadScenarios', () => {
+  it('builds the canonical endpoint set', () => {
+    const scenarios = getLoadScenarios({
+      authToken: 'secret',
+      escrowInvoiceId: 'invoice-123',
+    });
+
+    expect(scenarios.map((scenario) => scenario.path)).toEqual([
+      '/health',
+      '/api/invoices',
+      '/api/escrow/invoice-123',
+    ]);
+    expect(scenarios[1].headers.Authorization).toMatch(/^Bearer /);
+  });
 });
 
-test('assertSafeBaseUrl accepts local targets', () => {
-  assert.doesNotThrow(() => assertSafeBaseUrl('http://127.0.0.1:3001', false));
-  assert.doesNotThrow(() => assertSafeBaseUrl('http://localhost:3001', false));
+describe('buildAuthHeaders', () => {
+  it('omits authorization when no token is provided', () => {
+    expect(buildAuthHeaders(null)).toEqual({});
+    expect(buildAuthHeaders('abc')).toEqual({ Authorization: 'Bearer abc' });
+  });
 });
 
-test('parsePositiveInteger validates numeric inputs', () => {
-  assert.equal(parsePositiveInteger('5', 10, 'VALUE'), 5);
-  assert.equal(parsePositiveInteger(undefined, 10, 'VALUE'), 10);
-  assert.throws(() => parsePositiveInteger('0', 10, 'VALUE'), /VALUE must be a positive integer/);
-  assert.throws(() => parsePositiveInteger('abc', 10, 'VALUE'), /VALUE must be a positive integer/);
+describe('assertSafeBaseUrl', () => {
+  it('accepts local targets', () => {
+    expect(() => assertSafeBaseUrl('http://127.0.0.1:3001', false)).not.toThrow();
+    expect(() => assertSafeBaseUrl('http://localhost:3001', false)).not.toThrow();
+  });
+});
+
+describe('parsePositiveInteger', () => {
+  it('validates numeric inputs', () => {
+    expect(parsePositiveInteger('5', 10, 'VALUE')).toBe(5);
+    expect(parsePositiveInteger(undefined, 10, 'VALUE')).toBe(10);
+    expect(() => parsePositiveInteger('0', 10, 'VALUE')).toThrow(/VALUE must be a positive integer/);
+    expect(() => parsePositiveInteger('abc', 10, 'VALUE')).toThrow(/VALUE must be a positive integer/);
+  });
 });

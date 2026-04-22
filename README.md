@@ -25,7 +25,7 @@ Part of the LiquiFact stack: frontend (Next.js) | backend (this repo) | contract
 2. Install dependencies
 
    ```bash
-   npm ci
+   npm install
    ```
 
 3. Configure environment if needed
@@ -423,7 +423,7 @@ GitHub Actions runs on push and pull requests to `main`:
 
 1. Fork the repo and clone your fork.
 2. Create a branch from `main`.
-3. Run `npm ci`.
+3. Run `npm install`.
 4. Make focused changes and keep style consistent.
 5. Run `npm run lint`, `npm test`, and any relevant local checks.
 6. Push your branch and open a pull request.

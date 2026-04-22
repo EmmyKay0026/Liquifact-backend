@@ -2,7 +2,8 @@
 'use strict';
 
 const request = require('supertest');
-const { app, resetStore } = require('../index');
+const app = require('../index');
+const { resetStore } = app;
 
 /**
  * Creates an invoice and returns the full response body data object.
