@@ -29,11 +29,24 @@ const logger = require('./logger');
 const requestId = require('./middleware/requestId');
 const pinoHttp = require('pino-http');
 const investRoutes = require('./routes/invest');
+const { createRedisEscrowSummaryCache } = require('./cache/redis');
 
 const PORT = process.env.PORT || 3001;
 
 // In-memory storage for invoices (Issue #25).
 let invoices = [];
+const escrowSummaryCache = createRedisEscrowSummaryCache();
+
+function parseLedgerSequence(value) {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+  const parsed = Number.parseInt(String(value), 10);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return null;
+  }
+  return parsed;
+}
 
 /**
  * Create the Express application instance.
@@ -186,18 +199,41 @@ function createApp(options = {}) {
 
   app.get('/api/escrow/:invoiceId', authenticateToken, async (req, res) => {
     const { invoiceId } = req.params;
+    const currentLedger =
+      parseLedgerSequence(req.query.ledgerSequence) ??
+      parseLedgerSequence(req.headers['x-ledger-sequence']);
 
     try {
+      if (escrowSummaryCache) {
+        const cached = await escrowSummaryCache.getSummary(invoiceId, currentLedger);
+        if (cached.hit) {
+          res.set('X-Cache', 'HIT');
+          return res.json({
+            data: cached.value,
+            message: 'Escrow summary served from Redis cache.',
+          });
+        }
+      }
+
       /**
        * Simulates a Soroban operation for escrow lookup.
        *
        * @returns {Promise<object>} Placeholder escrow state.
        */
       const operation = async () => {
-        return { invoiceId, status: 'not_found', fundedAmount: 0 };
+        return {
+          invoiceId,
+          status: 'not_found',
+          fundedAmount: 0,
+          ledgerSequence: currentLedger,
+        };
       };
 
       const data = await callSorobanContract(operation);
+      if (escrowSummaryCache) {
+        await escrowSummaryCache.setSummary(invoiceId, data, currentLedger);
+      }
+      res.set('X-Cache', 'MISS');
       return res.json({
         data,
         message: 'Escrow state read from Soroban contract via robust integration wrapper.',
