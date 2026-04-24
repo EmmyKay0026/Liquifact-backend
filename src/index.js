@@ -4,15 +4,21 @@
  * Express server bootstrap for invoice financing, auth, and Stellar integration.
  *
  * All /api/* routes now enforce tenant-scoped data isolation:
- *   - `extractTenant` middleware resolves the caller's tenantId from either
- *     the `x-tenant-id` request header or an authenticated JWT claim.
- *   - Every invoice read/write delegates to the tenant-aware repository so
- *     that no tenant can ever observe or mutate another tenant's data.
+ * - `extractTenant` middleware resolves the caller's tenantId from either
+ * the `x-tenant-id` request header or an authenticated JWT claim.
+ * - Every invoice read/write delegates to the tenant-aware repository so
+ * that no tenant can ever observe or mutate another tenant's data.
  */
 
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+
+const config = require('./config');
+// Fail-fast boot validation
+if (process.env.NODE_ENV !== 'test') {
+  config.validate();
+}
 
 const { createSecurityMiddleware } = require('./middleware/security');
 const { createCorsOptions } = require('./config/cors');
@@ -24,6 +30,7 @@ const { authenticateToken } = require('./middleware/auth');
 const smeRouter = require('./routes/sme');
 const errorHandler = require('./middleware/errorHandler');
 const { callSorobanContract } = require('./services/soroban');
+const { performHealthChecks } = require('./services/health');
 const AppError = require('./errors/AppError');
 const logger = require('./logger');
 const requestId = require('./middleware/requestId');
@@ -45,6 +52,11 @@ let invoices = [];
 function createApp(options = {}) {
   const { enableTestRoutes = false } = options;
   const app = express();
+
+  // If in test mode, validate right when creating the app to mimic boot
+  if (enableTestRoutes) {
+    config.validate();
+  }
 
   app.use(requestId);
   app.use(pinoHttp({
@@ -79,12 +91,14 @@ function createApp(options = {}) {
 
   app.use('/api/sme', smeRouter);
 
-  app.get('/health', (req, res) => {
-    return res.json({
-      status: 'ok',
+  app.get('/health', async (req, res) => {
+    const { healthy, checks } = await performHealthChecks();
+    return res.status(healthy ? 200 : 503).json({
+      status: healthy ? 'ok' : 'error',
       service: 'liquifact-api',
       version: '0.1.0',
       timestamp: new Date().toISOString(),
+      checks
     });
   });
 
@@ -146,17 +160,14 @@ function createApp(options = {}) {
       return res.status(404).json({ error: 'Invoice not found' });
     }
 
-     
     if (invoices[invoiceIndex].deletedAt) {
       return res.status(400).json({ error: 'Invoice is already deleted' });
     }
 
-     
     invoices[invoiceIndex].deletedAt = new Date().toISOString();
 
     return res.json({
       message: 'Invoice soft-deleted successfully.',
-       
       data: invoices[invoiceIndex],
     });
   });
@@ -169,17 +180,14 @@ function createApp(options = {}) {
       return res.status(404).json({ error: 'Invoice not found' });
     }
 
-     
     if (!invoices[invoiceIndex].deletedAt) {
       return res.status(400).json({ error: 'Invoice is not deleted' });
     }
 
-     
     invoices[invoiceIndex].deletedAt = null;
 
     return res.status(200).json({
       message: 'Invoice restored successfully.',
-       
       data: invoices[invoiceIndex],
     });
   });
