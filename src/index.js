@@ -23,6 +23,7 @@ const AppError = require('./errors/AppError');
 const logger = require('./logger');
 const requestId = require('./middleware/requestId');
 const pinoHttp = require('pino-http');
+const investRoutes = require('./routes/invest');
 
 const PORT = process.env.PORT || 3001;
 
@@ -88,6 +89,8 @@ function createApp(options = {}) {
       },
     });
   });
+
+  app.use('/api/invest', investRoutes);
 
   app.get('/api/invoices', (req, res) => {
     const includeDeleted = req.query.includeDeleted === 'true';
