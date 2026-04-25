@@ -1,7 +1,9 @@
-const { Pool } = require('pg');
 require('dotenv').config();
 
-// Migration configuration for node-pg-migrate
+/**
+ * Migration configuration for node-pg-migrate
+ * @type {Object}
+ */
 const config = {
   // Database connection
   client: 'pg',
