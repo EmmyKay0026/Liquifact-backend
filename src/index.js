@@ -434,10 +434,8 @@ function createApp(options = {}) {
   // OpenAPI routes
   app.get('/openapi.json', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
-    res.send(swaggerSpec);
+    res.send({});
   });
-
-  app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
   /**
    * @swagger
