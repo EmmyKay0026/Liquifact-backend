@@ -430,7 +430,8 @@ function createApp(options = {}) {
   app.use('/api/invest', investRoutes);
   app.use('/api/invoices', invoiceFileRouter);
 
-  app.get('/api/invoices', (req, res) => {
+  app.get('/api/invoices', validateQuery(paginationQuerySchema), (req, res) => {
+    const { page, limit, status, smeId, buyerId, dateFrom, dateTo, sortBy, order } = req.validatedQuery;
     const includeDeleted = req.query.includeDeleted === 'true';
 
     const filtered = includeDeleted
