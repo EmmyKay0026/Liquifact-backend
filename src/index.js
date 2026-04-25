@@ -38,6 +38,20 @@
 // // In-memory storage for invoices (Issue #25).
 // let invoices = [];
 
+/**
+ * Combined authentication middleware: allows JWT or API key for admin/service auth.
+ * @param {object} req - Express request.
+ * @param {object} res - Express response.
+ * @param {function} next - Next middleware.
+ */
+function adminAuth(req, res, next) {
+  if (req.headers['x-api-key']) {
+    return apiKeyAuth(req, res, next);
+  } else {
+    return authenticateToken(req, res, next);
+  }
+}
+
 // /**
 //  * Create the Express application instance.
 //  *
@@ -117,7 +131,7 @@
 //     });
 //   });
 
-//   app.post('/api/invoices', authenticateToken, sensitiveLimiter, (req, res) => {
+//   app.post('/api/invoices', adminAuth, sensitiveLimiter, (req, res) => {
 //     const { amount, customer } = req.body;
 
 //     if (!amount || !customer) {
@@ -141,7 +155,7 @@
 //     });
 //   });
 
-//   app.delete('/api/invoices/:id', authenticateToken, (req, res) => {
+//   app.delete('/api/invoices/:id', adminAuth, (req, res) => {
 //     const { id } = req.params;
 //     const invoiceIndex = invoices.findIndex((inv) => inv.id === id);
 
@@ -164,7 +178,7 @@
 //     });
 //   });
 
-//   app.patch('/api/invoices/:id/restore', authenticateToken, (req, res) => {
+//   app.patch('/api/invoices/:id/restore', adminAuth, (req, res) => {
 //     const { id } = req.params;
 //     const invoiceIndex = invoices.findIndex((inv) => inv.id === id);
 
@@ -322,6 +336,7 @@ const {
 const { auditMiddleware } = require('./middleware/audit');
 const { globalLimiter, sensitiveLimiter } = require('./middleware/rateLimit');
 const { authenticateToken } = require('./middleware/auth');
+const { apiKeyAuth } = require('./middleware/apiKey');
 const smeRouter = require('./routes/sme');
 const errorHandler = require('./middleware/errorHandler');
 const { callSorobanContract } = require('./services/soroban');
