@@ -405,6 +405,34 @@ function createApp(options = {}) {
   app.use('/api/sme', smeRouter);
   app.use('/api/invest', investRoutes);
 
+  /**
+   * @swagger
+   * /health:
+   *   get:
+   *     summary: Health check endpoint
+   *     description: Returns the health status of the API service
+   *     tags: [Health]
+   *     responses:
+   *       200:
+   *         description: Service is healthy
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 status:
+   *                   type: string
+   *                   example: ok
+   *                 service:
+   *                   type: string
+   *                   example: liquifact-api
+   *                 version:
+   *                   type: string
+   *                   example: 0.1.0
+   *                 timestamp:
+   *                   type: string
+   *                   format: date-time
+   */
   app.get('/health', (req, res) => {
     res.json({
       status: 'ok',
@@ -415,6 +443,36 @@ function createApp(options = {}) {
     });
   });
 
+  // OpenAPI routes
+  app.get('/openapi.json', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+  });
+
+  app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+  /**
+   * @swagger
+   * /api:
+   *   get:
+   *     summary: API information
+   *     description: Returns basic information about the API
+   *     tags: [Info]
+   *     responses:
+   *       200:
+   *         description: API information
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 name:
+   *                   type: string
+   *                 description:
+   *                   type: string
+   *                 endpoints:
+   *                   type: object
+   */
   app.get('/api', (req, res) => {
     res.json({
       name: 'LiquiFact API',
@@ -477,6 +535,107 @@ function createApp(options = {}) {
     }
   );
 
+  /**
+   * @swagger
+   * /api/invoices/{id}:
+   *   get:
+   *     summary: Get a single invoice
+   *     description: Retrieve a single invoice by its ID
+   *     tags: [Invoices]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Invoice ID
+   *     responses:
+   *       200:
+   *         description: Invoice retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 data:
+   *                   $ref: '#/components/schemas/Invoice'
+   *                 message:
+   *                   type: string
+   *       401:
+   *         description: Unauthorized
+   *       403:
+   *         description: Forbidden - not the owner
+   *       404:
+   *         description: Invoice not found
+   */
+  app.get('/api/invoices/:id', authenticateToken, (req, res) => {
+    const { id } = req.params;
+    const userId = req.user?.id || req.user?.sub || req.headers['x-user-id']; // Placeholder for auth
+
+    // Basic validation
+    if (!id || id.trim() === '') {
+      return res.status(400).json({ error: 'Bad Request', message: 'Missing or invalid invoice ID' });
+    }
+
+    // Find invoice
+    const invoice = invoices.find((inv) => inv.id === id);
+
+    if (!invoice) {
+      return res.status(404).json({ error: 'Not Found', message: `Invoice with ID '${id}' not found` });
+    }
+
+    // Check if deleted
+    if (invoice.deletedAt) {
+      return res.status(404).json({ error: 'Not Found', message: `Invoice with ID '${id}' not found` });
+    }
+
+    // Authorization check (placeholder)
+    // In real app, check if user owns the invoice
+    // For now, allow all authenticated users
+
+    return res.json({
+      data: invoice,
+      message: 'Invoice retrieved successfully',
+    });
+  });
+
+  /**
+   * @swagger
+   * /api/invoices/{id}:
+   *   delete:
+   *     summary: Soft delete an invoice
+   *     description: Mark an invoice as deleted (soft delete)
+   *     tags: [Invoices]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Invoice ID
+   *     responses:
+   *       200:
+   *         description: Invoice soft-deleted successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 message:
+   *                   type: string
+   *                 data:
+   *                   $ref: '#/components/schemas/Invoice'
+   *       400:
+   *         description: Invoice is already deleted
+   *       404:
+   *         description: Invoice not found
+   *       401:
+   *         description: Unauthorized
+   */
   app.delete('/api/invoices/:id', authenticateToken, (req, res) => {
     const invoice = invoices.find((inv) => inv.id === req.params.id);
 
@@ -514,6 +673,39 @@ function createApp(options = {}) {
           .json({ error: 'Invoice is not deleted' });
       }
 
+  /**
+   * @swagger
+   * /api/escrow/{invoiceId}:
+   *   get:
+   *     summary: Get escrow state for an invoice
+   *     description: Retrieve the escrow state from the Soroban contract for a specific invoice
+   *     tags: [Escrow]
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: invoiceId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Invoice ID
+   *     responses:
+   *       200:
+   *         description: Escrow state retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 data:
+   *                   $ref: '#/components/schemas/EscrowState'
+   *                 message:
+   *                   type: string
+   *       401:
+   *         description: Unauthorized
+   *       500:
+   *         description: Error fetching escrow state
+   */
   app.get('/api/escrow/:invoiceId', authenticateToken, async (req, res) => {
     const { invoiceId } = req.params;
     const currentLedger =
